@@ -1,0 +1,11 @@
+sync-project-checklist.md
+server/node_modules
+server/src
+server/package-lock.json
+server/package.json
+server/tsconfig.json
+sync-system/node_modules
+sync-system/package-lock.json
+sync-system/package.json
+sync-system/tsconfig.json
+.env
