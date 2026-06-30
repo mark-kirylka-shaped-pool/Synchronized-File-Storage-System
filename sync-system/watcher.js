@@ -20,25 +20,25 @@ class Watcher {
         //     console.log(`[ALL] ${event} on ${path}`);
         // });
         this.watcher
-            .on('add', (path) => {
-                console.log(`[WATCHER] File added: ${path}`);
-                this.snapshot.add(path);
+            .on('add', (filePath) => {
+                console.log(`[WATCHER] File added: ${filePath}`);
+                this.snapshot.add(filePath).catch((error) => console.error(error));
             })
-            .on('addDir', (path) => {
-                console.log(`[WATCHER] Directory added: ${path}`);
-                this.snapshot.add(path);
+            .on('addDir', (dirPath) => {
+                console.log(`[WATCHER] Directory added: ${dirPath}`);
+                this.snapshot.add(dirPath).catch((error) => console.error(error));
             })
-            .on('change', (path) => {
-                console.log(`[WATCHER] File changed: ${path}`);
-                this.snapshot.update(path, path);
+            .on('change', (filePath) => {
+                console.log(`[WATCHER] File changed: ${filePath}`);
+                this.snapshot.update(filePath, filePath).catch((error) => console.error(error));
             })
-            .on('unlink', (path) => {
-                console.log(`[WATCHER] File removed: ${path}`);
-                this.snapshot.remove(path);
+            .on('unlink', (filePath) => {
+                console.log(`[WATCHER] File removed: ${filePath}`);
+                this.snapshot.remove(filePath);
             })
-            .on('unlinkDir', (path) => {
-                console.log(`[WATCHER] Directory removed: ${path}`);
-                this.snapshot.remove(path);
+            .on('unlinkDir', (dirPath) => {
+                console.log(`[WATCHER] Directory removed: ${dirPath}`);
+                this.snapshot.remove(dirPath);
             })
             .on('error', (error) => console.error('Watcher error:', error))
             .on('ready', () => {
