@@ -3,7 +3,6 @@ const {Watcher} = require('./watcher')
 
 class SpiderSyncEngine {
     constructor(directorypath) {
-        this.directorypath = directorypath;
         this.snapshots = new Snapshot(directorypath);
         this.watcher = new Watcher(directorypath);
     }
