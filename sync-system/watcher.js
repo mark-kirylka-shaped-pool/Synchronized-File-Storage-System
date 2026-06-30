@@ -1,8 +1,9 @@
 const chokidar = require('chokidar');
 
 class Watcher {
-    constructor(directorypath) {
+    constructor(directorypath, snapshot) {
         this.directorypath = directorypath;
+        this.snapshot = snapshot;
         this.watcher = null;
     }
 
@@ -19,11 +20,26 @@ class Watcher {
         //     console.log(`[ALL] ${event} on ${path}`);
         // });
         this.watcher
-            .on('add', (path) => console.log(`File added: ${path}`))
-            .on('addDir', (path) => console.log(`Directory added: ${path}`))
-            .on('change', (path) => console.log(`File changed: ${path}`))
-            .on('unlink', (path) => console.log(`File removed: ${path}`))
-            .on('unlinkDir', (path) => console.log(`Directory removed: ${path}`))
+            .on('add', (path) => {
+                console.log(`[WATCHER] File added: ${path}`);
+                this.snapshot.add(path);
+            })
+            .on('addDir', (path) => {
+                console.log(`[WATCHER] Directory added: ${path}`);
+                this.snapshot.add(path);
+            })
+            .on('change', (path) => {
+                console.log(`[WATCHER] File changed: ${path}`);
+                this.snapshot.update(path, path);
+            })
+            .on('unlink', (path) => {
+                console.log(`[WATCHER] File removed: ${path}`);
+                this.snapshot.remove(path);
+            })
+            .on('unlinkDir', (path) => {
+                console.log(`[WATCHER] Directory removed: ${path}`);
+                this.snapshot.remove(path);
+            })
             .on('error', (error) => console.error('Watcher error:', error))
             .on('ready', () => {
                 console.log('Initial scan complete. Watching for changes...');

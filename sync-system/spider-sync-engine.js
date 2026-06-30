@@ -1,10 +1,12 @@
 const {Snapshot} = require('./snapshot')
 const {Watcher} = require('./watcher')
+const path = require('path');
 
 class SpiderSyncEngine {
     constructor(directorypath) {
-        this.snapshots = new Snapshot(directorypath);
-        this.watcher = new Watcher(directorypath);
+        this.snapshot = new Snapshot(directorypath);
+        this.snapshot.build();
+        this.watcher = new Watcher(directorypath, this.snapshot);
     }
 
     start() {

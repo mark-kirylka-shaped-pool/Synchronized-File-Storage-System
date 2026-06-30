@@ -17,6 +17,9 @@ class FileTree {
     }
     // helper function to recursively build the file tree
     async _buildNode(currentPath) {
+        if (currentPath.basename.startsWith('.')) {
+            return null; // skip hidden files and directories
+        }
         const stats = await fs.stat(currentPath);
         const metadata = new Metadata(stats.size, stats.mtime);
         const isDirectory = stats.isDirectory(); //does this work??
@@ -37,8 +40,11 @@ class FileTree {
     }
 
     async add(filePath) {
-        const dirPath = path.dirname(pathString);
-        const name = path.basename(pathString);
+        if (filePath.basename.startsWith('.')) {
+            return null; // skip hidden files and directories
+        }
+        const dirPath = path.dirname(filePath);
+        const name = path.basename(filePath);
         const parentNode = this.nodeMap.get(dirPath);
 
         // check if the parent directory exists in the tree, if not, throw an error
@@ -46,7 +52,7 @@ class FileTree {
             throw new Error(`[TREE] Parent directory does not exist for path: ${filePath}`);
         }
 
-        const node = await _buildNode(filePath);
+        const node = await this._buildNode(filePath);
 
         // warn if the file already exists in the tree
         if (parentNode.children.has(name)) {
@@ -54,13 +60,16 @@ class FileTree {
         }
         parentNode.children.set(name, node);
         this.nodeMap.set(filePath, node);
-        console.log(`[TREE] Added: ${pathString}`);
+        console.log(`[TREE] Added: ${filePath}`);
 
         return node;
     }
 
     //update a file's metadata in the tree, this requires deboucing, and will save time by moving instead of deleting and recreating the node
     async update(filePathFrom, filePathTo) {
+        if (filePathFrom.basename.startsWith('.')) {
+            return null; // skip hidden files and directories
+        }
         const node = this.nodeMap.get(filePathFrom);
 
         if (!node) {
@@ -81,6 +90,9 @@ class FileTree {
     }
 
     remove(filePath) {
+        if (filePath.basename.startsWith('.')) {
+            return null; // skip hidden files and directories
+        }
         const node = this.nodeMap.get(filePath);
 
         if (!node) {
@@ -99,7 +111,7 @@ class FileTree {
     _removeDirectory(node) {
     if (!node || !node.isDirectory) return;
 
-    // Recursively delete all descendants from the Map
+    // recursively delete all descendants from the Map
     const prefix = node.path + path.sep;
     for (const [key] of this.nodeMap) {
       if (key === node.path || key.startsWith(prefix)) {
@@ -114,3 +126,4 @@ class FileTree {
     console.log(`[TREE] Directory Removed: ${node.path}`);
   }
 }
+exports.FileTree = FileTree;
