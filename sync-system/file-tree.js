@@ -59,10 +59,22 @@ class FileTree {
 
         const node = await this._buildNode(resolvedPath);
 
-        // warn if the file already exists in the tree
+        // if the file or directory already exists in the tree, replace it with the new node
         if (parentNode.children.has(name)) {
-            console.warn(`[TREE] File already exists: ${resolvedPath}`);
+            const existingNode = parentNode.children.get(name);
+            if (existingNode) {
+                if (existingNode.isDirectory) {
+                    this._removeDirectory(existingNode);
+                } else {
+                    this.nodeMap.delete(existingNode.getPath());
+                    if (existingNode.parent) {
+                        existingNode.parent.children.delete(existingNode.name);
+                    }
+                }
+            }
+            console.warn(`[TREE] Replacing existing node: ${resolvedPath}`);
         }
+
         parentNode.children.set(name, node);
         this.nodeMap.set(resolvedPath, node);
         console.log(`[TREE] Added: ${resolvedPath}`);
@@ -80,17 +92,23 @@ class FileTree {
         const node = this.nodeMap.get(resolvedFrom);
 
         if (!node) {
-            throw new Error(`[TREE] File does not exist: ${resolvedFrom}`);
+            console.warn(`[TREE] Update skipped, file does not exist: ${resolvedFrom}`);
+            return null;
         }
 
         const stats = await fs.stat(resolvedTo);
         node.metadata.size = stats.size;
         node.metadata.modified = stats.mtime;
-        node.parent.children.delete(node.name);
-        node.parent = this.nodeMap.get(path.dirname(resolvedTo));
+        if (node.parent) {
+            node.parent.children.delete(node.name);
+        }
+        const newParent = this.nodeMap.get(path.dirname(resolvedTo));
+        node.parent = newParent || node.parent;
         node.name = path.basename(resolvedTo);
-        node.parent.children.set(node.name, node);
         node.path = resolvedTo;
+        if (node.parent) {
+            node.parent.children.set(node.name, node);
+        }
         this.nodeMap.delete(resolvedFrom);
         this.nodeMap.set(resolvedTo, node);
         console.log(`[TREE] Updated: ${resolvedTo}`);
@@ -105,14 +123,17 @@ class FileTree {
         const node = this.nodeMap.get(resolvedPath);
 
         if (!node) {
-            throw new Error(`[TREE] File does not exist: ${resolvedPath}`);
+            console.warn(`[TREE] Remove skipped, file does not exist: ${resolvedPath}`);
+            return null;
         }
 
         if (node.isDirectory) {
             this._removeDirectory(node);
             return;
         }
-        node.parent.children.delete(node.name);
+        if (node.parent) {
+            node.parent.children.delete(node.name);
+        }
         this.nodeMap.delete(resolvedPath);
         console.log(`[TREE] Removed: ${resolvedPath}`);
     }

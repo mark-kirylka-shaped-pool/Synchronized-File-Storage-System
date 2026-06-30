@@ -5,6 +5,7 @@ class Watcher {
         this.directorypath = directorypath;
         this.snapshot = snapshot;
         this.watcher = null;
+        this.timeoutHandle = null;
     }
 
     async start(timeout = 100000) {
@@ -46,13 +47,18 @@ class Watcher {
             });
 
         if (timeout > 0) {
-            setTimeout(() => {
+            this.timeoutHandle = setTimeout(() => {
                 this.stop();
             }, timeout);
         }
         return this.watcher;
     }
     async stop() {
+        if (this.timeoutHandle) {
+            clearTimeout(this.timeoutHandle);
+            this.timeoutHandle = null;
+        }
+
         if (this.watcher) {
             await this.watcher.close();
             console.log('Watcher stopped.');
